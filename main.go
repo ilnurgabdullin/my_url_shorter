@@ -15,10 +15,11 @@ import (
 
 func main() {
 	r:= gin.Default()
-
-	r.GET("/status", handlers.StatusCheck)
+    r.LoadHTMLGlob("templates/*")
+	r.GET("/", handlers.StatusCheck)
     r.GET("/o/:hash", handlers.OpenUrl)
 	r.POST("/short", handlers.ShortUrl)
+    
     storage.InitDB()
     records, err := storage.GetAllRecords()
     if err != nil {

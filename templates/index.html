@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Form</title>
+</head>
+<body>
+    <h1>Submit Form</h1>
+    <form id="myForm">
+        <label for="name">Name:</label>
+        <input type="text" id="name" name="name" required>
+        <button type="submit">Submit</button>
+    </form>
+    <div id="response"></div>
+
+    <script>
+        document.getElementById('myForm').addEventListener('submit', function (event) {
+            event.preventDefault();
+
+            const name = document.getElementById('name').value;
+            const responseDiv = document.getElementById('response');
+
+            fetch('/short', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ url: name })
+            })
+            .then(response => response.json())
+            .then(data => {
+                    responseDiv.innerHTML = `<p>${data.status}</p>`;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                responseDiv.innerHTML = "<p>Error submitting form</p>";
+            });
+        });
+
+        
+    </script>
+</body>
+</html>
