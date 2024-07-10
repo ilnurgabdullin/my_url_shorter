@@ -6,17 +6,19 @@ import (
     "fmt"
     "crypto/sha256"
     "encoding/hex"
+    "url_shorter/storage"
 )
 
 func StatusCheck(c *gin.Context) {
     c.HTML(http.StatusOK, "index.html", nil)  
 }
 
+
 func OpenUrl(c *gin.Context) {
     hash := c.Params.ByName("hash")
-    c.JSON(http.StatusOK, gin.H{
-    "answer":hash,
-    })   
+    longUlr, _ := storage.GetRecordByHash(hash);
+    c.Redirect(http.StatusMovedPermanently, longUlr.Long)
+    //c.JSON(http.StatusOK, gin.H{"answer":longUlr,})   
 }
 
 //
@@ -32,6 +34,7 @@ func ShortUrl(c *gin.Context){
     newUrl := GetShortHash(json.Message,10)
     fmt.Println("I get data", json.Message)
     fmt.Println("I make data", newUrl)
+    storage.InsertRecord(json.Message,newUrl)
     c.JSON(http.StatusOK, gin.H{
         "status": "http://127.0.0.1:8080/o/"+newUrl,    
     })

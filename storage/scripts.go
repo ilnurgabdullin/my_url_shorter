@@ -67,6 +67,26 @@ func GetAllRecords() ([]Record, error) {
     return records, nil
 }
 
+
+func GetRecordByHash(hash string) (Record, error) {
+    query := "SELECT * FROM urls WHERE shorturl = $1"
+    var record Record
+
+    // Выполнение запроса к базе данных
+    row := DB.QueryRow(query, hash)
+    err := row.Scan(&record.Long, &record.Short, &record.Id)
+
+    if err != nil {
+        if err == sql.ErrNoRows {
+            return Record{}, fmt.Errorf("Record not found for id: %s", hash)
+        }
+        return Record{}, fmt.Errorf("Error scanning row: %v", err)
+    }
+
+    return record, nil
+}
+
+
 type Record struct {
     Long string
     Short string
