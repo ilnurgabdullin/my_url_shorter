@@ -4,7 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
     "url_shorter/handlers"
     "url_shorter/storage"
-    "log"
+    
     // "database/sql"
     // "fmt"
     _ "github.com/lib/pq"
