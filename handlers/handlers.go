@@ -11,6 +11,15 @@ func StatusCheck(c *gin.Context) {
     })   
 }
 
+func OpenUrl(c *gin.Context) {
+    hash := c.Params.ByName("hash")
+    c.JSON(http.StatusOK, gin.H{
+    "answer":hash,
+    })   
+}
+
+//
+
 func ShortUrl(c *gin.Context){
     var json struct {
         Message string `json:"url"`    
