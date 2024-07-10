@@ -21,12 +21,6 @@ func main() {
 	r.POST("/short", handlers.ShortUrl)
     
     storage.InitDB()
-    records, err := storage.GetAllRecords()
-    if err != nil {
-        log.Fatalf("Error getting records: %v", err)
-    }
-    //storage.InsertRecord("loooong3","short3")
-    _ = records
     r.Run(":8080")
 
 }

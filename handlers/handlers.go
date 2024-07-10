@@ -32,8 +32,6 @@ func ShortUrl(c *gin.Context){
         return    
     }
     newUrl := GetShortHash(json.Message,10)
-    fmt.Println("I get data", json.Message)
-    fmt.Println("I make data", newUrl)
     storage.InsertRecord(json.Message,newUrl)
     c.JSON(http.StatusOK, gin.H{
         "status": "http://127.0.0.1:8080/o/"+newUrl,    
@@ -43,15 +41,12 @@ func ShortUrl(c *gin.Context){
 
 
 func GetShortHash(input string, length int) string {
-    // Применение хеш-функции SHA256 к строке
     hash := sha256.New()
     hash.Write([]byte(input))
     hashBytes := hash.Sum(nil)
 
-    // Преобразование байтового среза в строку в формате hex
     hashString := hex.EncodeToString(hashBytes)
 
-    // Оставляем только первые 'length' символов хеша
     if length > len(hashString) {
         length = len(hashString)
     }
