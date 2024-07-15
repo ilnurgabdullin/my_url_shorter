@@ -4,16 +4,10 @@ import (
     "database/sql"
     "fmt"
     "log"
+    "os"
+    "time"
 
     _ "github.com/lib/pq" // Импорт драйвера PostgreSQL
-)
-
-const (
-    host = "127.0.0.1"
-    port = 5432
-    user = "postgres"
-    password = "123"
-    dbname = "gobase"
 )
 
 
@@ -22,11 +16,36 @@ var DB *sql.DB
 
 
 func InitDB() {
-    psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
+    host := os.Getenv("DB_HOST")
+    port := os.Getenv("DB_PORT")
+    user := os.Getenv("DB_USER")
+    password := os.Getenv("DB_PASSWORD")
+    dbname := os.Getenv("DB_NAME")
+    psqlInfo := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
         host, port, user, password, dbname)
 
-    var err error
-    DB, err = sql.Open("postgres", psqlInfo)
+        var err error
+    maxRetries := 10
+    for i := 0; i < maxRetries; i++ {
+        DB, err = sql.Open("postgres", psqlInfo)
+        if err != nil {
+            log.Printf("Error connecting to the database: %v", err)
+        } else {
+            err = DB.Ping()
+            if err == nil {
+                break
+            }
+            log.Printf("Error pinging the database: %v", err)
+        }
+        log.Println("Retrying in 5 seconds...")
+        time.Sleep(5 * time.Second)
+    }
+
+
+
+
+
+    
     if err != nil {
         log.Fatalf("Error opening database: %v", err)
     }
