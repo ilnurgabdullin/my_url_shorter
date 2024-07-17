@@ -4,7 +4,7 @@ import (
     "database/sql"
     "fmt"
     "log"
-    "os"
+    //"os"
     "time"
      "crypto/sha256"
     
@@ -12,7 +12,7 @@ import (
     "math/rand"
     
 
-    _ "github.com/lib/pq" // Импорт драйвера PostgreSQL
+    _ "github.com/go-sql-driver/mysql" // Импорт драйвера PostgreSQL
 )
 
 
@@ -21,17 +21,19 @@ var DB *sql.DB
 
 
 func InitDB() {
-    host := os.Getenv("DB_HOST")
-    port := os.Getenv("DB_PORT")
-    user := os.Getenv("DB_USER")
-    password := os.Getenv("DB_PASSWORD")
-    dbname := os.Getenv("DB_NAME")
-    psqlInfo := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
-        host, port, user, password, dbname)
+    host := "172.18.0.2"//os.Getenv("DB_HOST")
+    port := "3306"//os.Getenv("DB_PORT")
+    user := "root"//os.Getenv("DB_USER")
+    password := "123"//os.Getenv("DB_PASSWORD")
+    dbname := "mysql"//os.Getenv("DB_NAME")
+    psqlInfo := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true", //host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
+     user, password, host, port, dbname)
+    //psqlInfo := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
+     //   host, port, user, password, dbname)
 
         var err error
     createTableQuery := `
-            CREATE TABLE IF NOT EXISTS public.urls (
+            CREATE TABLE IF NOT EXISTS mysql.urls (
                 longUrl VARCHAR(500),
                 shortUrl VARCHAR(10),
                 id SERIAL NOT NULL,
@@ -39,7 +41,7 @@ func InitDB() {
             );`
     maxRetries := 10
     for i := 0; i < maxRetries; i++ {
-        DB, err = sql.Open("postgres", psqlInfo)
+        DB, err = sql.Open("mysql", psqlInfo)
         if err != nil {
             log.Printf("Error connecting to the database: %v", err)
         } else {
@@ -50,16 +52,13 @@ func InitDB() {
             log.Printf("Error pinging the database: %v", err)
         }
         log.Println("Retrying in 5 seconds...")
+        
+
         time.Sleep(5 * time.Second)
 
 
         // Выполнение запроса
-        _, err := DB.Exec(createTableQuery)
-        if err != nil {
-            log.Fatalf("Error creating table: %v", err)
-
-        }
-        fmt.Println("Table 'urls' created or already exists.")
+        
         
     }
 
@@ -72,47 +71,28 @@ func InitDB() {
         log.Fatalf("Error connecting to the database: %v", err)
     }
 
+    
+    _, err = DB.Exec(createTableQuery)
+    if err != nil {
+        log.Fatalf("Error creating table: %v", err)
+
+        }
+        fmt.Println("Table 'urls' created or already exists.")
     fmt.Println("Successfully connected to the database!")
 }
 
-func GetAllRecords() ([]Record, error) {
-    query := "SELECT * FROM urls"
-    rows, err := DB.Query(query)
-    if err != nil {
-        return nil, fmt.Errorf("Error executing query: %v", err)
-    }
-    defer rows.Close()
-
-    var records []Record
-    for rows.Next() {
-        var record Record
-        err := rows.Scan(&record.Long, &record.Short, &record.Id)
-        fmt.Println(record.Long, record.Short, record.Id)
-
-        if err != nil {
-            return nil, fmt.Errorf("Error scanning row: %v", err)
-        }
-        records = append(records, record)
-    }
-
-    err = rows.Err()
-    if err != nil {
-        return nil, fmt.Errorf("Error during iteration: %v", err)
-    }
-
-    return records, nil
-}
 
 
 func checkHashExists(hash string) (bool, error) {
-    query := "SELECT EXISTS(SELECT 1 FROM urls WHERE shortUrl = $1)"
-    var exists bool
+    query := "SELECT EXISTS(SELECT 1 FROM urls WHERE shortUrl = ?)"
+    var exists int
     err := DB.QueryRow(query, hash).Scan(&exists)
     if err != nil {
-        return false, fmt.Errorf("Error executing query: %v", err)
+        return false, fmt.Errorf("Ошибка выполнения запроса: %v", err)
     }
-    return exists, nil
+    return exists == 1, nil
 }
+
 
 func GenerateUniqueShortHash(original string, length int) (string, error) {
     shortHash := GetShortHash(original, length)
@@ -146,7 +126,7 @@ func GetShortHash(input string, length int) string {
 
 
 func GetRecordByHash(hash string) (Record, error) {
-    query := "SELECT * FROM urls WHERE shorturl = $1"
+    query := "SELECT * FROM urls WHERE shorturl = ?"
     var record Record
 
     // Выполнение запроса к базе данных
@@ -155,9 +135,9 @@ func GetRecordByHash(hash string) (Record, error) {
 
     if err != nil {
         if err == sql.ErrNoRows {
-            return Record{}, fmt.Errorf("Record not found for id: %s", hash)
+            return Record{}, fmt.Errorf("Запись не найдена для id: %s", hash)
         }
-        return Record{}, fmt.Errorf("Error scanning row: %v", err)
+        return Record{}, fmt.Errorf("Ошибка сканирования строки: %v", err)
     }
 
     return record, nil
@@ -171,13 +151,19 @@ type Record struct {
 }
 
 func InsertRecord(long string, short string) error {
-    query := "INSERT INTO urls VALUES ($1, $2)"
-    var id int
-    err := DB.QueryRow(query, long, short).Scan(&id)
+    query := "INSERT INTO urls (longUrl, shortUrl) VALUES (?, ?)"
+    
+    // Выполнение запроса к базе данных
+    result, err := DB.Exec(query, long, short)
     if err != nil {
-        return fmt.Errorf("Error inserting new record: %v", err)
+        return fmt.Errorf("Ошибка вставки новой записи: %v", err)
     }
 
-    fmt.Printf("Inserted new record with ID: %d\n", id)
+    id, err := result.LastInsertId()
+    if err != nil {
+        return fmt.Errorf("Ошибка получения ID последней вставки: %v", err)
+    }
+
+    fmt.Printf("Вставлена новая запись с ID: %d\n", id)
     return nil
 }
