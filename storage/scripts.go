@@ -6,6 +6,11 @@ import (
     "log"
     "os"
     "time"
+     "crypto/sha256"
+    
+    "encoding/hex"
+    "math/rand"
+    
 
     _ "github.com/lib/pq" // Импорт драйвера PostgreSQL
 )
@@ -25,6 +30,13 @@ func InitDB() {
         host, port, user, password, dbname)
 
         var err error
+    createTableQuery := `
+            CREATE TABLE IF NOT EXISTS public.urls (
+                longUrl VARCHAR(500),
+                shortUrl VARCHAR(10),
+                id SERIAL NOT NULL,
+                PRIMARY KEY (id)
+            );`
     maxRetries := 10
     for i := 0; i < maxRetries; i++ {
         DB, err = sql.Open("postgres", psqlInfo)
@@ -39,13 +51,18 @@ func InitDB() {
         }
         log.Println("Retrying in 5 seconds...")
         time.Sleep(5 * time.Second)
+
+
+        // Выполнение запроса
+        _, err := DB.Exec(createTableQuery)
+        if err != nil {
+            log.Fatalf("Error creating table: %v", err)
+
+        }
+        fmt.Println("Table 'urls' created or already exists.")
+        
     }
 
-
-
-
-
-    
     if err != nil {
         log.Fatalf("Error opening database: %v", err)
     }
@@ -84,6 +101,47 @@ func GetAllRecords() ([]Record, error) {
     }
 
     return records, nil
+}
+
+
+func checkHashExists(hash string) (bool, error) {
+    query := "SELECT EXISTS(SELECT 1 FROM urls WHERE shortUrl = $1)"
+    var exists bool
+    err := DB.QueryRow(query, hash).Scan(&exists)
+    if err != nil {
+        return false, fmt.Errorf("Error executing query: %v", err)
+    }
+    return exists, nil
+}
+
+func GenerateUniqueShortHash(original string, length int) (string, error) {
+    shortHash := GetShortHash(original, length)
+    exists, err := checkHashExists(shortHash)
+    if err != nil {
+        return "", fmt.Errorf("Error checking hash existence: %v", err)
+    }
+
+    if exists {
+        rand.Seed(time.Now().UnixNano())
+        randomValue := rand.Intn(1000) // Случайное значение для добавления
+        newInput := fmt.Sprintf("%s%d", original, randomValue)
+        return GenerateUniqueShortHash(newInput, length)
+    }
+
+    return shortHash, nil
+}
+
+func GetShortHash(input string, length int) string {
+    hash := sha256.New()
+    hash.Write([]byte(input))
+    hashBytes := hash.Sum(nil)
+
+    hashString := hex.EncodeToString(hashBytes)
+
+    if length > len(hashString) {
+        length = len(hashString)
+    }
+    return hashString[:length]
 }
 
 

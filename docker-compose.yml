@@ -5,12 +5,14 @@ services:
     image: postgres:13
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 123
-      POSTGRES_DB: postgres
+      POSTGRES_PASSWORD: mysecretpassword
+      POSTGRES_DB: mydb
     networks:
       - my_network
     ports:
       - "5432:5432"
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
 
   app:
     build: .
@@ -18,16 +20,15 @@ services:
       - db
     environment:
       DB_HOST: db
-      DB_PORT: 5432
+      DB_PORT: "5432"
       DB_USER: postgres
-      DB_PASSWORD: 123
-      DB_NAME: postgres
+      DB_PASSWORD: mysecretpassword
+      DB_NAME: mydb
     networks:
       - my_network
     ports:
-      - "8080:8080" # Подразумевается, что ваше приложение слушает на порту 8080
+      - "8080:8080"
 
 networks:
   my_network:
     driver: bridge
-
