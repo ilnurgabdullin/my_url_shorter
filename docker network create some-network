@@ -1,0 +1,5 @@
+docker network create some-network 
+docker run --detach --network some-network --name some-mariadb -v /home/ilnur/mariadb_persist_storage:/var/lib/mysql:Z --env MARIADB_USER=example-user --env MARIADB_PASSWORD=my_cool_secret --env MARIADB_ROOT_PASSWORD=123 --env TZ="Europe/Moscow" mariadb:latest
+
+docker run -it --network some-network --rm mariadb mariadb -hsome-mariadb -uroot -p123
+

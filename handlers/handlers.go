@@ -33,7 +33,7 @@ func ShortUrl(c *gin.Context){
     newUrl, _ := storage.GenerateUniqueShortHash(json.Message,10)
     storage.InsertRecord(json.Message,newUrl)
     c.JSON(http.StatusOK, gin.H{
-        "status": "http://127.0.0.1:8080/o/"+newUrl,    
+        "status": "http://"+storage.GetLocalIP().String()+"/"+newUrl,    
     })
 }
 
