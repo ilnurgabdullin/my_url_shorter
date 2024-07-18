@@ -3,3 +3,4 @@ docker run --detach --network some-network --name some-mariadb -v /home/ilnur/ma
 
 docker run -it --network some-network --rm mariadb mariadb -hsome-mariadb -uroot -p123
 
+docker run --name nginx --env TZ="Europe/Moscow" --network some-network -v /home/ilnur/srv/nginx:/etc/nginx/ -d nginx
