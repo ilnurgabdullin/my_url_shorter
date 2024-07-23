@@ -6,7 +6,7 @@ import (
     "url_shorter/storage"
     
     // "database/sql"
-    "fmt"
+    //"fmt"
     //"log"
     //"net"
     _ "github.com/lib/pq"
@@ -21,7 +21,6 @@ func main() {
 	r.GET("/", handlers.StatusCheck)
     r.GET("/o/:hash", handlers.OpenUrl)
 	r.POST("/short", handlers.ShortUrl)
-    fmt.Println(storage.GetLocalIP())
     storage.InitDB()
     r.Run(":8080")
 
