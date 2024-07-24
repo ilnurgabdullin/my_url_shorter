@@ -2,14 +2,17 @@ version: "3"
 
 services:
   goapp:
-    build: ./
+    build: ./            # указываем путь к dockerfile
     ports:
-      - 8080:8080
+      - 8080:8080        # слева порт на хосте для доступа к контейнеру
+                         # справа порт используемый внутри контейнера
     networks:
-      - mynetwork
+      - mynetwork        # указываем docker сеть для взаимойствия контейнеров
     depends_on:
-      - db
-    environment:
+      - db               # контейнер с go приложением будет запущен только 
+                         # после запуска контейнера с базой данных
+
+    environment:         # задаём переменные окружения
       DB_NAME: GO_DATA
       DB_HOST: db
       DB_PORT: 3306
@@ -17,15 +20,16 @@ services:
       DB_PASSWORD: 123
 
   db:
-    image: mariadb
-    restart: always
+    image: mariadb       # указываем базовый образ
+    restart: always      # в случае  ошибки контейнер перезапускается
     environment:
       MYSQL_DATABASE: GO_DATA
       MYSQL_USER: example-user
       MYSQL_PASSWORD: my_cool_secret
       MYSQL_ROOT_PASSWORD: 123
       TZ: Europe/Moscow
-    volumes:
+    volumes:             # по этому пути будут хранится постоянные данные
+                         # которые будут сохраняться при перезапуске
       - /home/ilnur/mariadb_persist_storage:/var/lib/mysql
     ports:
       - 3306:3306
