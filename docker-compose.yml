@@ -1,34 +1,47 @@
-version: '3.8'
+version: "3"
 
 services:
-  db:
-    image: postgres:13
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: mysecretpassword
-      POSTGRES_DB: mydb
-    networks:
-      - my_network
+  goapp:
+    build: ./
     ports:
-      - "5432:5432"
-    volumes:
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
-
-  app:
-    build: .
+      - 8080:8080
+    networks:
+      - mynetwork
     depends_on:
       - db
     environment:
+      DB_NAME: GO_DATA
       DB_HOST: db
-      DB_PORT: "5432"
-      DB_USER: postgres
-      DB_PASSWORD: mysecretpassword
-      DB_NAME: mydb
-    networks:
-      - my_network
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASSWORD: 123
+
+  db:
+    image: mariadb
+    restart: always
+    environment:
+      MYSQL_DATABASE: GO_DATA
+      MYSQL_USER: example-user
+      MYSQL_PASSWORD: my_cool_secret
+      MYSQL_ROOT_PASSWORD: 123
+      TZ: Europe/Moscow
+    volumes:
+      - /home/ilnur/mariadb_persist_storage:/var/lib/mysql
     ports:
-      - "8080:8080"
+      - 3306:3306
+    networks:
+      - mynetwork
+
+  nginx:
+    image: nginx
+    environment:
+      TZ: Europe/Moscow
+    volumes:
+      - /home/ilnur/srv/nginx:/etc/nginx/
+    networks:
+      - mynetwork
+
 
 networks:
-  my_network:
+  mynetwork:
     driver: bridge

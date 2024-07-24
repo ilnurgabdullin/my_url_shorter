@@ -5,7 +5,7 @@ import (
     "fmt"
     "log"
     "net"
-    //"os"
+    "os"
     "time"
      "crypto/sha256"
     
@@ -34,11 +34,11 @@ func GetLocalIP() net.IP {
 }
 
 func InitDB() {
-    host := "172.18.0.2"//os.Getenv("DB_HOST")
-    port := "3306"//os.Getenv("DB_PORT")
-    user := "root"//os.Getenv("DB_USER")
-    password := "123"//os.Getenv("DB_PASSWORD")
-    dbname := "mysql"//os.Getenv("DB_NAME")
+    host := os.Getenv("DB_HOST")
+    port := os.Getenv("DB_PORT")
+    user := os.Getenv("DB_USER")
+    password := os.Getenv("DB_PASSWORD")
+    dbname := os.Getenv("DB_NAME")
     psqlInfo := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true", //host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
      user, password, host, port, dbname)
     //psqlInfo := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
@@ -46,7 +46,7 @@ func InitDB() {
 
         var err error
     createTableQuery := `
-            CREATE TABLE IF NOT EXISTS mysql.urls (
+            CREATE TABLE IF NOT EXISTS GO_DATA.urls (
                 longUrl VARCHAR(500),
                 shortUrl VARCHAR(10),
                 id SERIAL NOT NULL,

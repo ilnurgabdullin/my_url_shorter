@@ -4,3 +4,21 @@ docker run --detach --network some-network --name some-mariadb -v /home/ilnur/ma
 docker run -it --network some-network --rm mariadb mariadb -hsome-mariadb -uroot -p123
 
 docker run --name nginx --env TZ="Europe/Moscow" --network some-network -v /home/ilnur/srv/nginx:/etc/nginx/ -d nginx
+
+
+
+
+
+
+docker build -t goapp2 .
+
+docker run --detach --network some-network goapp2 
+
+
+docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' gallant_elion 
+
+
+
+
+
+https://www.duckdns.org/update?domains=ilnur.duckdns.org&token=5df4fc65-b045-4f0f-a595-95f6ec875b26&ip=1.1.1.1&verbose=true
